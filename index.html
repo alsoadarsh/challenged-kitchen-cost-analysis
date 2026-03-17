@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Challenged Kitchen — Make vs. Buy Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:       #1A1A1A;
+    --ink-light: #4A4A4A;
+    --rule:      #D6CFC4;
+    --page:      #F7F4EF;
+    --cream:     #EDE8E0;
+    --accent:    #B5451B;
+    --accent-2:  #2B5278;
+    --green:     #2D6A4F;
+    --mono:      'DM Mono', monospace;
+    --serif:     'Playfair Display', Georgia, serif;
+    --sans:      'DM Sans', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── Grain overlay ─────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── Header ────────────────────────────────────────── */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 2.5rem 4rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 2rem;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-light);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .header-right {
+    text-align: right;
+  }
+
+  .verdict-badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--page);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .verdict-value {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--green);
+    display: block;
+  }
+
+  /* ── Nav strip ──────────────────────────────────────── */
+  nav {
+    border-bottom: 1px solid var(--rule);
+    padding: 0 4rem;
+    display: flex;
+    gap: 0;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  nav a {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-decoration: none;
+    padding: 0.85rem 1.5rem 0.85rem 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  nav a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 4rem 6rem;
+  }
+
+  section {
+    padding-top: 4rem;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  section:nth-child(2) { animation-delay: 0.15s; }
+  section:nth-child(3) { animation-delay: 0.25s; }
+  section:nth-child(4) { animation-delay: 0.35s; }
+  section:nth-child(5) { animation-delay: 0.45s; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+    max-width: 60px;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    line-height: 1.25;
+  }
+
+  p {
+    color: var(--ink-light);
+    max-width: 68ch;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  /* ── KPI Row ────────────────────────────────────────── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin: 2rem 0;
+  }
+
+  .kpi {
+    background: var(--page);
+    padding: 1.5rem 1.75rem;
+    transition: background 0.2s;
+  }
+
+  .kpi:hover { background: var(--cream); }
+
+  .kpi-label {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.6rem;
+  }
+
+  .kpi-value {
+    font-family: var(--serif);
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.accent { color: var(--accent); }
+  .kpi-value.blue { color: var(--accent-2); }
+
+  .kpi-sub {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--ink-light);
+    margin-top: 0.35rem;
+  }
+
+  /* ── Tables ─────────────────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 2rem 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  thead tr {
+    border-bottom: 2px solid var(--ink);
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-align: right;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+  }
+
+  th:first-child { text-align: left; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: var(--cream); }
+
+  td {
+    padding: 0.75rem 1rem;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--ink);
+  }
+
+  td:first-child {
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .row-total td {
+    border-top: 2px solid var(--ink);
+    font-weight: 500;
+    background: var(--cream);
+  }
+
+  .row-total td:first-child {
+    font-weight: 600;
+  }
+
+  td.positive { color: var(--green); }
+  td.highlight { color: var(--accent); font-weight: 500; }
+
+  /* ── Two-column layout ──────────────────────────────── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--rule);
+    margin: 2rem 0;
+  }
+
+  .col-card {
+    background: var(--page);
+    padding: 2rem;
+  }
+
+  .col-card h3 {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .col-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .col-card li {
+    font-size: 0.88rem;
+    color: var(--ink-light);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .col-card li::before {
+    content: '—';
+    color: var(--rule);
+    flex-shrink: 0;
+    font-family: var(--mono);
+  }
+
+  /* ── Callout ─────────────────────────────────────────── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    padding: 1.25rem 1.75rem;
+    background: var(--cream);
+    margin: 2rem 0;
+  }
+
+  .callout p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--ink);
+    max-width: none;
+  }
+
+  .callout strong {
+    font-family: var(--serif);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── Simulation strip ───────────────────────────────── */
+  .sim-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    margin: 2rem 0;
+  }
+
+  .sim-cell {
+    background: var(--page);
+    padding: 1.5rem;
+  }
+
+  .sim-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.5rem;
+  }
+
+  .sim-value {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .sim-sub {
+    font-size: 0.78rem;
+    color: var(--ink-light);
+    margin-top: 0.25rem;
+    font-family: var(--mono);
+  }
+
+  /* ── Error note ─────────────────────────────────────── */
+  .error-note {
+    background: #FDF3F0;
+    border: 1px solid #E8C5BB;
+    border-left: 3px solid var(--accent);
+    padding: 1.25rem 1.75rem;
+    margin: 2rem 0;
+    font-size: 0.85rem;
+  }
+
+  .error-note h4 {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .error-note p { margin: 0.25rem 0; max-width: none; font-size: 0.85rem; }
+
+  /* ── Download bar ───────────────────────────────────── */
+  .download-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    background: var(--ink);
+    margin: 3rem 0 0;
+    flex-wrap: wrap;
+  }
+
+  .download-bar p {
+    color: rgba(247,244,239,0.7);
+    font-size: 0.82rem;
+    margin: 0;
+    max-width: none;
+    flex: 1;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--cream); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--page);
+    border: 1px solid rgba(247,244,239,0.4);
+  }
+
+  .btn-outline:hover { background: rgba(247,244,239,0.1); }
+
+  /* ── Footer ─────────────────────────────────────────── */
+  footer {
+    border-top: 2px solid var(--ink);
+    padding: 2rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  footer a { color: var(--ink); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── Animations ─────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ─────────────────────────────────────── */
+  @media (max-width: 800px) {
+    header, nav, main, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    header { grid-template-columns: 1fr; }
+    .header-right { text-align: left; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .sim-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-meta">MBA Consulting Case · Adarsh Shukla · February 2025</div>
+    <h1>Challenged Kitchen Co.<br><span>Make vs. Buy Decision</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="verdict-badge">Recommendation</div>
+    <span class="verdict-value">In-House Production</span>
+    <div style="font-family:var(--mono);font-size:0.65rem;color:var(--ink-light);margin-top:0.3rem;">NPV advantage: $215,737</div>
+  </div>
+</header>
+
+<nav>
+  <a href="#context">Context</a>
+  <a href="#financials">Financials</a>
+  <a href="#cashflows">Cash Flows</a>
+  <a href="#simulation">Simulation</a>
+  <a href="#strategy">Strategy</a>
+  <a href="#memo">Memo</a>
+</nav>
+
+<main>
+
+  <!-- ── Context ──────────────────────────────────────── -->
+  <section id="context">
+    <div class="section-label">01 · Background</div>
+    <h2>The Decision</h2>
+    <p>Challenged Kitchen Co. is launching a new product line and must choose between building in-house production capability or outsourcing manufacturing. The choice locks in unit economics for four years.</p>
+    <p>This analysis models both options under fixed demand assumptions and a Monte Carlo simulation across 1,000 scenarios, arriving at a clear recommendation with a quantified financial advantage.</p>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Selling Price</div>
+        <div class="kpi-value">$40</div>
+        <div class="kpi-sub">per unit · fixed 4 yrs</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Year 1 Demand</div>
+        <div class="kpi-value blue">14,000</div>
+        <div class="kpi-sub">units · 20% annual growth</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Tax Rate</div>
+        <div class="kpi-value">21%</div>
+        <div class="kpi-sub">discount rate: 7%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Analysis Horizon</div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-sub">years · straight-line depr.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="col-card">
+        <h3>Option A — In-House Production</h3>
+        <ul>
+          <li>Initial equipment investment: $400,000</li>
+          <li>Variable cost per unit: $7</li>
+          <li>Depreciation: $100,000/year (straight-line)</li>
+          <li>Full production control</li>
+          <li>IP protection and process flexibility</li>
+        </ul>
+      </div>
+      <div class="col-card">
+        <h3>Option B — Outsourcing</h3>
+        <ul>
+          <li>No initial capital required</li>
+          <li>Fixed cost per unit: $18 (all-in)</li>
+          <li>Price locked for 4 years</li>
+          <li>No depreciation, no fixed overhead</li>
+          <li>Supplier dependency and quality risk</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Financials ────────────────────────────────────── -->
+  <section id="financials">
+    <div class="section-label">02 · NPV Summary</div>
+    <h2>Financial Comparison</h2>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">In-House NPV</div>
+        <div class="kpi-value green">$1,304,949</div>
+        <div class="kpi-sub">net of $400k initial invest</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Outsource NPV</div>
+        <div class="kpi-value blue">$1,089,212</div>
+        <div class="kpi-sub">no initial investment</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">NPV Advantage</div>
+        <div class="kpi-value accent">$215,737</div>
+        <div class="kpi-sub">in favour of in-house</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Break-Even</div>
+        <div class="kpi-value">3,030</div>
+        <div class="kpi-sub">units/yr · Y1 demand: 14,000</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p><strong>Year 1 breaks even at 3,030 units.</strong> Projected Year 1 demand is 14,000 units — a margin of safety of nearly 11,000 units, or 79% above the break-even threshold. The investment recovers in Year 1 under almost any realistic demand scenario.</p>
+    </div>
+    
+  </section>
+
+  <!-- ── Cash Flows ─────────────────────────────────────── -->
+  <section id="cashflows">
+    <div class="section-label">03 · Four-Year Detail</div>
+    <h2>Cash Flow Model</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Demand</th>
+            <th>Revenue</th>
+            <th>In-House COGS</th>
+            <th>Outsource COGS</th>
+            <th>In-House Cash Flow</th>
+            <th>Outsource Cash Flow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Year 1</td>
+            <td>14,000</td>
+            <td>$560,000</td>
+            <td>$98,000</td>
+            <td>$252,000</td>
+            <td class="positive">$385,980</td>
+            <td>$243,320</td>
+          </tr>
+          <tr>
+            <td>Year 2</td>
+            <td>16,800</td>
+            <td>$672,000</td>
+            <td>$117,600</td>
+            <td>$302,400</td>
+            <td class="positive">$458,976</td>
+            <td>$291,984</td>
+          </tr>
+          <tr>
+            <td>Year 3</td>
+            <td>20,160</td>
+            <td>$806,400</td>
+            <td>$141,120</td>
+            <td>$362,880</td>
+            <td class="positive">$546,571</td>
+            <td>$350,381</td>
+          </tr>
+          <tr>
+            <td>Year 4</td>
+            <td>24,192</td>
+            <td>$967,680</td>
+            <td>$169,344</td>
+            <td>$435,456</td>
+            <td class="positive">$651,685</td>
+            <td>$420,457</td>
+          </tr>
+          <tr class="row-total">
+            <td>NPV (7%)</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td class="positive">$1,304,949</td>
+            <td>$1,089,212</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="font-size:0.78rem;font-family:var(--mono);color:var(--ink-light);">
+      In-house cash flow = (Revenue − COGS − Depreciation) × (1 − 0.21) + Depreciation. NPV deducts $400,000 initial investment at t=0. Outsource cash flow = (Revenue − COGS) × (1 − 0.21). Discount rate 7%.
+    </p>
+  </section>
+
+  <!-- ── Simulation ─────────────────────────────────────── -->
+  <section id="simulation">
+    <div class="section-label">04 · Monte Carlo Validation</div>
+    <h2>1,000-Iteration Simulation</h2>
+    <p>To test the recommendation under uncertainty, a Monte Carlo simulation varied Year 1 demand (mean 14,000, SD 1,000) and the annual growth rate (mean 20%, SD 3%) across 1,000 iterations.</p>
+
+    <div class="sim-grid">
+      <div class="sim-cell">
+        <div class="sim-label">In-House Preference</div>
+        <div class="sim-value" style="color:var(--green);">100%</div>
+        <div class="sim-sub">of 1,000 iterations</div>
+      </div>
+      <div class="sim-cell">
+        <div class="sim-label">In-House NPV Range</div>
+        <div class="sim-value">$878K–$1.75M</div>
+        <div class="sim-sub">across all scenarios</div>
+      </div>
+      <div class="sim-cell">
+        <div class="sim-label">Outsource NPV Range</div>
+        <div class="sim-value">$805K–$1.38M</div>
+        <div class="sim-sub">always lower than in-house</div>
+      </div>
+      <div class="sim-cell">
+        <div class="sim-label">Consistent Advantage</div>
+        <div class="sim-value">$154K–$220K</div>
+        <div class="sim-sub">per iteration</div>
+      </div>
+      <div class="sim-cell">
+        <div class="sim-label">Y1 Break-Even</div>
+        <div class="sim-value" style="color:var(--green);">100%</div>
+        <div class="sim-sub">of iterations exceed 3,030 units</div>
+      </div>
+      <div class="sim-cell">
+        <div class="sim-label">95% CI — In-House</div>
+        <div class="sim-value">$1.1M–$1.5M</div>
+        <div class="sim-sub">lower bound still beats outsource</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p><strong>The simulation never produced a scenario where outsourcing outperformed in-house production.</strong> Not in a single iteration out of 1,000. The lower variable cost ($7 vs $18) creates a structural advantage that compounds with volume growth — by Year 4, in-house is producing at 24,192 units with $11/unit more margin than the outsource option.</p>
+    </div>
+  </section>
+
+  <!-- ── Strategy ──────────────────────────────────────── -->
+  <section id="strategy">
+    <div class="section-label">05 · Strategic Analysis</div>
+    <h2>Why In-House Wins Beyond the Numbers</h2>
+
+    <div class="two-col">
+      <div class="col-card">
+        <h3>In-House Advantages</h3>
+        <ul>
+          <li>$11/unit cost advantage widens with scale — Year 4 gap is significant</li>
+          <li>Quality control stays internal — critical for consumer kitchen products</li>
+          <li>Production scheduling flexibility around demand spikes</li>
+          <li>IP and process knowledge stays proprietary</li>
+          <li>No supplier dependency or price renegotiation risk after Year 4</li>
+        </ul>
+      </div>
+      <div class="col-card">
+        <h3>Risks to Manage</h3>
+        <ul>
+          <li>$400k upfront — working capital and contingency planning required</li>
+          <li>Equipment reliability and maintenance scheduling</li>
+          <li>Staff training during ramp-up period</li>
+          <li>Volume risk if demand misses Year 1 projections (break-even: 3,030)</li>
+          <li>Fixed cost structure less flexible if line is discontinued</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>The implementation timeline runs across three phases: team formation and equipment specs (Days 1–30), installation and staff training (Days 31–60), and production trials leading to full-scale operations (Days 61–90). Financial requirements include $400,000 equipment plus a 10% contingency of $40,000 and working capital to be determined by inventory policy.</p>
+  </section>
+
+  <!-- ── Memo ───────────────────────────────────────────── -->
+  <section id="memo">
+    <div class="section-label">06 · Full Document</div>
+    <h2>Business Memorandum</h2>
+    <p>The complete business memo was submitted to Mary Challenge, CEO of Challenged Kitchen Co. It includes the executive summary, full financial statements, Monte Carlo methodology, strategic analysis, implementation plan, and appendices.</p>
+
+    <section id="screenshots">
+  <div class="section-label">07 · Model Screenshots</div>
+  <h2>Excel Model</h2>
+  <p>Screenshots from the corrected financial model.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:2rem 0;">
+    <img src="docs/screenshots/excel_inhouse.png" 
+         style="width:100%;border:1px solid var(--rule);" 
+         alt="In-House four-year model">
+    <img src="docs/screenshots/excel_npv_comparison.png" 
+         style="width:100%;border:1px solid var(--rule);" 
+         alt="NPV comparison">
+  </div>
+  <img src="docs/screenshots/excel_monte_carlo.png" 
+       style="width:100%;border:1px solid var(--rule);margin-top:0.5rem;" 
+       alt="Monte Carlo simulation — 1,000 iterations">
+    </section>
+    
+    <div class="download-bar">
+      <p>Full memo with financial model, Monte Carlo detail, and implementation timeline.</p>
+      <a href="Challenged_Kitchen_Memo.pdf" class="btn" download>↓ Download Memo (PDF)</a>
+      <a href="Challenged_Kitchen_Model.xlsx" class="btn btn-outline" download>↓ Excel Model</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>Adarsh Shukla · MS Business Analytics · University of Dayton · 2025</span>
+  <span>
+    <a href="https://github.com/alsoadarsh">GitHub</a>
+    &nbsp;·&nbsp;
+    <a href="https://linkedin.com/in/adarshhshukla">LinkedIn</a>
+  </span>
+</footer>
+
+</body>
+</html>
